@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Crypto Price Chart</h1>
+  <label for="symbol">Select coin:</label>
+  <select id="symbol">
+    <option value="bitcoin" selected>BTC</option>
+    <option value="ethereum">ETH</option>
+    <option value="cardano">ADA</option>
+  </select>
+  <canvas id="priceChart" width="800" height="400"></canvas>
+  <script src="chart.js"></script>
+</body>
+</html>
