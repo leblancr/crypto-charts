@@ -1,20 +1,10 @@
 from fastapi import FastAPI
-from backend.services import get_crypto_prices
-from fastapi.responses import HTMLResponse
+from backend.routers import auth, coins, watchlist
 
-app = FastAPI(title="FastAPI Crypto API")
+app = FastAPI(title="Crypto Dashboard API")
 
-@app.get("/api/prices")
-async def prices():
-    data = await get_crypto_prices()
-    return {"prices": data}
+# Include routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(coins.router, prefix="/coins", tags=["coins"])
+app.include_router(watchlist.router, prefix="/watchlist", tags=["watchlist"])
 
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    data = await get_crypto_prices()
-    html_content = "<h1>Crypto Prices</h1><ul>"
-    for coin, price in data.items():
-        html_content += f"<li><b>{coin.title()}</b>: {price}</li>"
-    html_content += "</ul>"
-    return html_content

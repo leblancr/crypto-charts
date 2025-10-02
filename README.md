@@ -12,6 +12,11 @@ poetry add httpx
 source $(poetry env info --path)/bin/activate
 
 To start:
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn backend.main:app --reload
 
+pkill -f "uvicorn"
+
+Kill anything using port 8000 automatically and restart:
+kill -9 $(lsof -t -i :8000) 2>/dev/null; poetry run uvicorn backend.main:app --reload
 
