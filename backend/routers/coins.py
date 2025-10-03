@@ -29,24 +29,19 @@ async def current_prices(symbols: str = Query(..., description="Comma-separated 
     coins = [s.strip() for s in symbols.split(",") if s.strip()]
     return await get_current_prices(coins)
 
+# Endpoint: GET /coins/{symbol}/price — live price for header
 @router.get("/{symbol}/price")
-async def get_price(symbol: str):
+async def price_endpoint(symbol: str):
     import requests
     coin_id = resolve_coin(symbol)
     url = "https://api.coingecko.com/api/v3/simple/price"
-    params = {
-        "ids": coin_id,
-        "vs_currencies": "usd",
-        "include_24hr_change": "true"
-    }
+    params = {"ids": coin_id, "vs_currencies": "usd", "include_24hr_change": "true"}
     resp = requests.get(url, params=params)
     data = resp.json()
     return {symbol.lower(): data.get(coin_id)}
 
+# Endpoint: GET /coins/{symbol}/history — historical prices for charts
 @router.get("/{symbol}/history")
-async def history(symbol: str, days: str = "30", interval: Optional[str] = None):
-    """
-    days: numeric string like "30" or "7", or "max"
-    interval: optional, "daily" or "hourly"
-    """
-    return await get_historical_prices(symbol, days, interval)
+async def history_endpoint(symbol: str, days: str = "30", interval: Optional[str] = None):
+    coin_id = resolve_coin(symbol)
+    return await get_historical_prices(coin_id, days, interval)
