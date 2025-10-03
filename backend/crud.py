@@ -25,15 +25,31 @@ def get_watchlist(db: Session, user_id: int):
     return db.query(Watchlist).filter(Watchlist.user_id == user_id).all()
 
 def add_to_watchlist(db: Session, user_id: int, coin: str):
+    coin = coin.lower()
+    existing = db.query(Watchlist).filter(
+        Watchlist.user_id == user_id,
+        Watchlist.coin == coin
+    ).first()
+
+    if existing:
+        return {"detail": f"{coin.upper()} already in watchlist"}
+
     item = Watchlist(user_id=user_id, coin=coin)
     db.add(item)
     db.commit()
     db.refresh(item)
-    return item
+    return {"detail": f"{coin.upper()} added"}
 
 def remove_from_watchlist(db: Session, user_id: int, coin: str):
-    item = db.query(Watchlist).filter(Watchlist.user_id==user_id, Watchlist.coin==coin).first()
-    if item:
-        db.delete(item)
-        db.commit()
-    return item
+    coin = coin.lower()
+    item = db.query(Watchlist).filter(
+        Watchlist.user_id == user_id,
+        Watchlist.coin == coin
+    ).first()
+
+    if not item:
+        return {"detail": f"{coin.upper()} not in watchlist"}
+
+    db.delete(item)
+    db.commit()
+    return {"detail": f"{coin.upper()} removed"}

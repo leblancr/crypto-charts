@@ -1,7 +1,9 @@
 const ctx = document.getElementById("priceChart").getContext("2d");
+const PRICE_FETCH_INTERVAL = 60000; // 60 seconds
 
 let latestSymbol = null; // guards against out-of-order responses
 let priceChart = null; // we create it after data is fetched
+let lastPriceFetch = 0;
 
 // Cache last successful series so the chart can stay visible during 429s
 const lastSeriesBySymbol = new Map();
@@ -22,6 +24,29 @@ function formatData(data) {
     };
 }
 
+async function loadTop50() {
+  try {
+    const resp = await fetch("/coins/top50"); // must exist in your backend
+    const coins = await resp.json();
+
+    const container = document.getElementById("topCoins");
+    container.innerHTML = "<h3>Top 50 Coins</h3>";
+
+    coins.forEach(c => {
+      const btn = document.createElement("button");
+      btn.textContent = `${c.symbol.toUpperCase()} (${c.name})`;
+      btn.style.margin = "4px";
+      btn.addEventListener("click", async () => {
+        await fetch(`/watchlist/${c.id}`, { method: "POST" });
+        await populateDropdown();
+      });
+      container.appendChild(btn);
+    });
+  } catch (err) {
+    console.error("Error loading top coins:", err);
+  }
+}
+
 // Show why we're using cached data (e.g., "429 Too Many Requests")
 function showStaleStatus(symbol, note) {
   const el = document.getElementById("status");
@@ -31,6 +56,12 @@ function showStaleStatus(symbol, note) {
 }
 
 async function updateLivePrice(symbol) {
+  const now = Date.now();
+  if (now - lastPriceFetch < PRICE_FETCH_INTERVAL) {
+    return; // 🔹 skip if we fetched too recently
+  }
+  lastPriceFetch = now;
+
   const reqFor = symbol;                   // capture intent
   try {
     const resp = await fetch(`/coins/${symbol}/price`);
@@ -268,3 +299,6 @@ populateDropdown().then(() => {
     updateLivePrice(select.value);
   }
 });
+
+// load top 50 buttons
+loadTop50();

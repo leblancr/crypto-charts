@@ -29,6 +29,31 @@ async def current_prices(symbols: str = Query(..., description="Comma-separated 
     coins = [s.strip() for s in symbols.split(",") if s.strip()]
     return await get_current_prices(coins)
 
+@router.get("/top50")
+async def get_top_50():
+    url = "https://api.coingecko.com/api/v3/coins/markets"
+    params = {
+        "vs_currency": "usd",
+        "order": "market_cap_desc",
+        "per_page": 50,
+        "page": 1,
+        "sparkline": False
+    }
+    resp = requests.get(url, params=params)
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail="Failed to fetch top coins")
+    return [{"id": coin["id"], "symbol": coin["symbol"], "name": coin["name"]} for coin in resp.json()]
+
+# Endpoint: GET /coins/{symbol}/history — historical prices for charts
+@router.get("/{symbol}/history")
+async def history(symbol: str, days: str = "30", interval: Optional[str] = None):
+    coin_id = resolve_coin(symbol)  # your existing resolver
+    try:
+        return await get_historical_prices(coin_id, days, interval)
+    except HTTPException:
+        # already has correct status/detail from get_historical_prices
+        raise
+
 # Endpoint: GET /coins/{symbol}/price — live price for header
 @router.get("/{symbol}/price")
 async def price_endpoint(symbol: str):
@@ -60,13 +85,3 @@ async def price_endpoint(symbol: str):
 
     # Return under the original symbol key so frontend uses data[symbol.toLowerCase()]
     return {symbol.lower(): coin}
-
-# Endpoint: GET /coins/{symbol}/history — historical prices for charts
-@router.get("/{symbol}/history")
-async def history(symbol: str, days: str = "30", interval: Optional[str] = None):
-    coin_id = resolve_coin(symbol)  # your existing resolver
-    try:
-        return await get_historical_prices(coin_id, days, interval)
-    except HTTPException:
-        # already has correct status/detail from get_historical_prices
-        raise
