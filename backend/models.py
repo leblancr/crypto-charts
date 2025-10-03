@@ -1,35 +1,22 @@
-# backend/models.py
-from sqlalchemy import Column, String, Float, DateTime, Integer, PrimaryKeyConstraint, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from .database import Base
 from datetime import datetime
 
-Base = declarative_base()
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password_hash = Column(String)
+
+class Watchlist(Base):
+    __tablename__ = "watchlist"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    coin = Column(String, index=True)
 
 class CryptoPrice(Base):
     __tablename__ = "crypto_prices"
-
-    coin = Column(String, nullable=False)             # e.g. "BTC"
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
-    price = Column(Float, nullable=False)
-
-    __table_args__ = (
-        PrimaryKeyConstraint("coin", "timestamp", name="crypto_pk"),
-    )
-
-# -------------------------------
-# Add User model for auth
-class User(Base):
-    __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class Watchlist(Base):
-    __tablename__ = "watchlists"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    coin = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    coin = Column(String, index=True)
+    price = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
