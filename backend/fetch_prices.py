@@ -1,6 +1,7 @@
-# backend/fetch_prices.py
-import httpx
-from typing import List, Optional
+# backend/services/fetch_prices.py
+from typing import Optional, List, Dict, Any
+import requests
+from fastapi import HTTPException
 
 # add more mappings if you need them
 SYMBOL_TO_ID = {
@@ -38,41 +39,24 @@ async def get_current_prices(symbols: List[str]):
         print("get_current_prices error:", e)
         return {}
 
-async def get_historical_prices(symbol: str, days: str = "30", interval: Optional[str] = None):
-    """
-    symbol: "BTC" or "bitcoin"
-    days: e.g. "30", "7", or "max"
-    interval: optional, "daily" or "hourly" (CoinGecko handles granularity automatically)
-    """
-    coin_id = map_symbol_to_id(symbol)
-    if not coin_id:
-        return []
-
+# Fetches from CoinGecko and returns [{ "timestamp": <ms>, "price": <float> }, ...]
+async def get_historical_prices(coin_id: str, days: str = "30", interval: Optional[str] = None) -> List[Dict[str, Any]]:
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
     params = {"vs_currency": "usd", "days": days}
-
-    print("DEBUG historical request:", url, params)
-
     if interval:
         params["interval"] = interval
 
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-            print("DEBUG historical response keys:", data.keys())
-    except Exception as e:
-        print("get_historical_prices error:", e)
-        return []
+        resp = requests.get(url, params=params, timeout=10)
+    except requests.RequestException as e:
+        status = getattr(getattr(e, "response", None), "status_code", 502)
+        detail = getattr(getattr(e, "response", None), "text", str(e))
+        raise HTTPException(status_code=status, detail=detail)
 
-    prices = data.get("prices", [])  # list of [timestamp_ms, price]
-    out = []
-    for ts, price in prices:
-        # ensure JSON serializable types: timestamp as int (ms), price as float
-        try:
-            out.append({"timestamp": int(ts), "price": float(price)})
-        except Exception:
-            # skip malformed entries
-            continue
-    return out
+    if resp.status_code != 200:
+        # Surface the actual upstream error (e.g., 429 Too Many Requests)
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+    payload = resp.json()
+    prices = payload.get("prices", [])
+    return [{"timestamp": int(ts), "price": float(p)} for ts, p in prices]

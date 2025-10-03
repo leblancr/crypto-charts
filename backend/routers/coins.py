@@ -1,6 +1,6 @@
 # backend/routes.py
 import requests
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import List, Optional
 from backend.fetch_prices import get_current_prices, get_historical_prices
 
@@ -33,15 +33,40 @@ async def current_prices(symbols: str = Query(..., description="Comma-separated 
 @router.get("/{symbol}/price")
 async def price_endpoint(symbol: str):
     import requests
+    from fastapi import HTTPException
+
+    # If you already have resolve_coin in this file, keep using that.
     coin_id = resolve_coin(symbol)
+
     url = "https://api.coingecko.com/api/v3/simple/price"
     params = {"ids": coin_id, "vs_currencies": "usd", "include_24hr_change": "true"}
-    resp = requests.get(url, params=params)
-    data = resp.json()
-    return {symbol.lower(): data.get(coin_id)}
+
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+    except requests.RequestException as e:
+        status = getattr(getattr(e, "response", None), "status_code", 502)
+        detail = getattr(getattr(e, "response", None), "text", str(e))
+        raise HTTPException(status_code=status, detail=detail)
+
+    if resp.status_code != 200:
+        # Surface upstream error (e.g., 429 Too Many Requests)
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+    payload = resp.json()
+    coin = payload.get(coin_id)
+    if not coin or "usd" not in coin:
+        # Upstream said OK but gave no price; make it explicit
+        raise HTTPException(status_code=502, detail=f"Upstream empty price payload for {coin_id}")
+
+    # Return under the original symbol key so frontend uses data[symbol.toLowerCase()]
+    return {symbol.lower(): coin}
 
 # Endpoint: GET /coins/{symbol}/history — historical prices for charts
 @router.get("/{symbol}/history")
-async def history_endpoint(symbol: str, days: str = "30", interval: Optional[str] = None):
-    coin_id = resolve_coin(symbol)
-    return await get_historical_prices(coin_id, days, interval)
+async def history(symbol: str, days: str = "30", interval: Optional[str] = None):
+    coin_id = resolve_coin(symbol)  # your existing resolver
+    try:
+        return await get_historical_prices(coin_id, days, interval)
+    except HTTPException:
+        # already has correct status/detail from get_historical_prices
+        raise
