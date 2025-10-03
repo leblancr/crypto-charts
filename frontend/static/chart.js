@@ -68,8 +68,72 @@ async function updateChart(symbol = "bitcoin", days = 30) {
     }
 }
 
+async function populateDropdown() {
+  try {
+    const response = await fetch("/watchlist");
+    const coins = await response.json();
+
+    const select = document.getElementById("symbol");
+    select.innerHTML = ""; // clear existing options
+
+    coins.forEach(coin => {
+      const option = document.createElement("option");
+      option.value = coin;
+      option.textContent = coin.toUpperCase();
+      select.appendChild(option);
+    });
+
+    // auto-update chart for the first coin in list
+    if (coins.length > 0) {
+      select.value = coins[0];
+      updateChart(coins[0].coin);
+    }
+  } catch (err) {
+    console.error("Error populating dropdown:", err);
+  }
+}
+
+async function updateLivePrice(symbol) {
+  try {
+    const resp = await fetch(`/coins/${symbol}/price`);
+    const data = await resp.json();
+    const coin = data[symbol];   // <-- dynamic key here
+    if (coin) {
+      document.getElementById("livePrice").textContent =
+        `${symbol.toUpperCase()}: $${coin.usd.toLocaleString()} (${coin.usd_24h_change.toFixed(2)}%)`;
+    } else {
+      document.getElementById("livePrice").textContent = "No price data available";
+    }
+  } catch (err) {
+    console.error("Error fetching live price:", err);
+  }
+}
+
+// Event listeners for buttons
+document.getElementById('addCoin').addEventListener('click', async () => {
+  const symbol = prompt("Enter coin to add:");
+  if (!symbol) return;
+  await fetch(`/watchlist/${symbol}`, { method: 'POST' });
+  await populateDropdown();
+});
+
+document.getElementById('removeCoin').addEventListener('click', async () => {
+  const symbol = document.getElementById('symbol').value;
+  await fetch(`/watchlist/${symbol}`, { method: 'DELETE' });
+  await populateDropdown();
+});
+
 // dropdown handler
-document.getElementById("symbol").addEventListener("change", e => updateChart(e.target.value));
+document.getElementById("symbol").addEventListener("change", e => {
+  const symbol = e.target.value;
+  updateChart(symbol);
+  updateLivePrice(symbol);
+});
 
 // initial load
-updateChart();
+populateDropdown().then(() => {
+  const select = document.getElementById("symbol");
+  if (select.value) {
+    updateLivePrice(select.value);
+  }
+});
