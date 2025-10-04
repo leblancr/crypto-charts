@@ -1,0 +1,38 @@
+:root {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --accent: #4db6ac;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+h1, h2 {
+  color: var(--accent);
+}
+
+select, button {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid #333;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #333;
+  cursor: pointer;
+}
+
+pre {
+  background-color: #1a1a1a;
+  color: #c5c5c5;
+  padding: 10px;
+  border-radius: 6px;
+}

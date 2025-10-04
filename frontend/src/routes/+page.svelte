@@ -70,3 +70,4 @@
 {#if selected}
   <PriceChart symbol={selected} />
 {/if}
+
