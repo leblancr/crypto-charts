@@ -1,21 +1,27 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from backend.crud import get_watchlist, add_to_watchlist, remove_from_watchlist
 from backend.database import get_db
+from backend.models import Watchlist
 
 router = APIRouter()
-TEST_USER_ID = 1  # hard-coded for testing
 
-@router.post("/{symbol}")
-def add_watchlist(symbol: str, db: Session = Depends(get_db)):
-    return add_to_watchlist(db, TEST_USER_ID, symbol)
-
-@router.get("/")
-def read_watchlist(db: Session = Depends(get_db)):
-    items = get_watchlist(db, TEST_USER_ID)
-    # Only return the coin symbols as a list of strings
+@router.get("/{user_id}")
+def get_watchlist(user_id: int, db: Session = Depends(get_db)):
+    items = db.query(Watchlist).filter_by(user_id=user_id).all()
     return [item.coin for item in items]
 
-@router.delete("/{symbol}")
-def remove_watchlist(symbol: str, db: Session = Depends(get_db)):
-    return remove_from_watchlist(db, TEST_USER_ID, symbol)
+@router.post("/{user_id}/{coin}")
+def add_coin(user_id: int, coin: str, db: Session = Depends(get_db)):
+    exists = db.query(Watchlist).filter_by(user_id=user_id, coin=coin).first()
+    if not exists:
+        db.add(Watchlist(user_id=user_id, coin=coin))
+        db.commit()
+    return get_watchlist(user_id, db)
+
+@router.delete("/{user_id}/{coin}")
+def remove_coin(user_id: int, coin: str, db: Session = Depends(get_db)):
+    item = db.query(Watchlist).filter_by(user_id=user_id, coin=coin).first()
+    if item:
+        db.delete(item)
+        db.commit()
+    return get_watchlist(user_id, db)

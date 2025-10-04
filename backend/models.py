@@ -16,7 +16,6 @@ class Watchlist(Base):
 
 class CryptoPrice(Base):
     __tablename__ = "crypto_prices"
-
     coin = Column(String, primary_key=True, nullable=False)
     timestamp = Column(DateTime, primary_key=True, nullable=False)
     price = Column(Float, nullable=False)
