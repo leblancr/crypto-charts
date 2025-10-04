@@ -18,5 +18,15 @@ poetry run uvicorn backend.main:app --reload
 pkill -f "uvicorn"
 
 Kill anything using port 8000 automatically and restart:
-kill -9 $(lsof -t -i :8000) 2>/dev/null; poetry run uvicorn backend.main:app --reload
+kill -9 $(lsof -t -i :8000) 2>/dev/null; poetry run uvicorn backend.main:app --reload --log-level debug
 
+Frontend:
+npm create svelte@latest frontend
+npm install -g npm@11.6.1
+npx sv create .
+
+Install dependencies:
+npm install
+
+Start the dev server:
+npm run dev

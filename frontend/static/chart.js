@@ -47,6 +47,33 @@ async function loadTop50() {
   }
 }
 
+async function populateDropdown() {
+  try {
+    const response = await fetch("/watchlist");
+    const coins = await response.json();
+
+    const select = document.getElementById("symbol");
+    select.innerHTML = ""; // clear existing options
+
+    coins.forEach(coin => {
+      const option = document.createElement("option");
+      option.value = coin;
+      option.textContent = coin.toUpperCase();
+      select.appendChild(option);
+    });
+
+    // auto-update chart for the first coin in list
+    if (coins.length > 0) {
+      select.value = coins[0];
+      latestSymbol = coins[0];
+      await updateChart(coins[0]);       // coins is a list of strings now
+      await updateLivePrice(coins[0]);   // keep header in sync
+    }
+  } catch (err) {
+    console.error("Error populating dropdown:", err);
+  }
+}
+
 // Show why we're using cached data (e.g., "429 Too Many Requests")
 function showStaleStatus(symbol, note) {
   const el = document.getElementById("status");
@@ -240,33 +267,6 @@ async function updateChart(symbol = "bitcoin", days = 30) {
     } catch (err) {
         console.error("Error updating chart:", err);
     }
-}
-
-async function populateDropdown() {
-  try {
-    const response = await fetch("/watchlist");
-    const coins = await response.json();
-
-    const select = document.getElementById("symbol");
-    select.innerHTML = ""; // clear existing options
-
-    coins.forEach(coin => {
-      const option = document.createElement("option");
-      option.value = coin;
-      option.textContent = coin.toUpperCase();
-      select.appendChild(option);
-    });
-
-    // auto-update chart for the first coin in list
-    if (coins.length > 0) {
-      select.value = coins[0];
-      latestSymbol = coins[0];
-      await updateChart(coins[0]);       // coins is a list of strings now
-      await updateLivePrice(coins[0]);   // keep header in sync
-    }
-  } catch (err) {
-    console.error("Error populating dropdown:", err);
-  }
 }
 
 // Event listeners for buttons

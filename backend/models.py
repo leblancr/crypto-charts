@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Float, Integer, String, ForeignKey, DateTime
 from .database import Base
 from datetime import datetime
 
@@ -16,7 +16,7 @@ class Watchlist(Base):
 
 class CryptoPrice(Base):
     __tablename__ = "crypto_prices"
-    id = Column(Integer, primary_key=True, index=True)
-    coin = Column(String, index=True)
-    price = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    coin = Column(String, primary_key=True, nullable=False)
+    timestamp = Column(DateTime, primary_key=True, nullable=False)
+    price = Column(Float, nullable=False)
