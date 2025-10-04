@@ -2,56 +2,43 @@
   import { onMount } from "svelte";
   import PriceChart from "$lib/PriceChart.svelte";
 
-  let text = "loading...";
   let watchlist = [];
   let selected = "";
+  const API_BASE = "http://127.0.0.1:8000";
+  const USER_ID = 1;   // hardcoded for now
 
-  function addCoin() {
-        const symbol = prompt("Enter coin id (e.g. bitcoin, eth, solana):");
-    if (!symbol) return;
-     fetch(`${API_BASE}/watchlist/${symbol}`, { method: "POST" });
-     loadWatchlist();
-  }
-
-   async function loadWatchlist() {
+  async function loadWatchlist() {
     try {
-      const resp = await fetch(`${API_BASE}/watchlist`);
+      const resp = await fetch(`${API_BASE}/watchlist/${USER_ID}`);
       const data = await resp.json();
       watchlist = data;
       if (watchlist.length > 0) {
-        selected = watchlist[0];   // always set to first string
+        selected = watchlist[0];
       }
     } catch (err) {
-      error = String(err);
       console.error("Error fetching watchlist:", err);
     }
   }
 
-
-  function removeCoin() {
-      if (!selected) return;
-      fetch(`${API_BASE}/watchlist/${selected}`, { method: "DELETE" });
-      loadWatchlist();
+  async function addCoin() {
+    const symbol = prompt("Enter coin id (e.g. bitcoin, eth, solana):");
+    if (!symbol) return;
+    await fetch(`${API_BASE}/watchlist/${USER_ID}/${symbol}`, { method: "POST" });
+    await loadWatchlist();
   }
 
-  onMount(async () => {
-    try {
-      const resp = await fetch("http://127.0.0.1:8000/watchlist");
-      text = await resp.text();
-      console.log("RAW RESPONSE:", text);
-    } catch (err) {
-      text = "error: " + err;
-      console.error("FETCH FAILED:", err);
-    }
-  });
-</script>
+  async function removeCoin() {
+    if (!selected) return;
+    await fetch(`${API_BASE}/watchlist/${USER_ID}/${selected}`, { method: "DELETE" });
+    await loadWatchlist();
+  }
 
-<h1>Debug Watchlist</h1>
-<pre>{text}</pre>
+  onMount(loadWatchlist);
+</script>
 
 <h1>Crypto Dashboard</h1>
 
-<h2>Watchlist:</h2>
+<h2>Watchlist</h2>
 {#if watchlist.length === 0}
   <p>No coins yet</p>
 {:else}
@@ -62,12 +49,11 @@
   </select>
 {/if}
 
-<div style="margin-top: 8px;">
+<div style="margin-top:8px">
   <button on:click={addCoin}>Add Coin</button>
   <button on:click={removeCoin} disabled={!selected}>Remove</button>
 </div>
 
 {#if selected}
-  <PriceChart symbol={selected} />
+  <PriceChart symbol={selected}/>
 {/if}
-
