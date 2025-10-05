@@ -11,7 +11,8 @@ poetry add httpx
 
 source $(poetry env info --path)/bin/activate
 
-To start:
+To start backend:
+cd /common/projects/python/crypto-dashboard
 poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 poetry run uvicorn backend.main:app --reload
 
@@ -29,4 +30,5 @@ Install dependencies:
 npm install
 
 Start the dev server:
+cd /common/projects/python/crypto-dashboard/frontend
 npm run dev
