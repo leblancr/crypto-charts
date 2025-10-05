@@ -52,19 +52,19 @@
     await loadPrices();
   }
 
-  async function addCoin() {
-    const symbol = prompt("Enter coin id (e.g. bitcoin, ethereum, cardano):");
-    if (!symbol) return;
-    await fetch(`${API_BASE}/watchlist/${USER_ID}/${symbol}`, { method: "POST" });
-    await loadWatchlist();
-  }
+async function addCoin() {
+  const symbol = prompt("Enter coin symbol (e.g. btc, eth, ada):");
+  if (!symbol) return;
+  await fetch(`${API_BASE}/watchlist/1/${symbol}`, { method: "POST" });
+  await loadWatchlist();
+}
 
-  async function removeCoin() {
-    if (!selected) return;
-    await fetch(`${API_BASE}/watchlist/${USER_ID}/${selected}`, { method: "DELETE" });
-    selected = "";
-    await loadWatchlist();
-  }
+async function removeCoin() {
+  if (!selected) return;
+  await fetch(`${API_BASE}/watchlist/1/${selected}`, { method: "DELETE" });
+  selected = null;
+  await loadWatchlist();
+}
 
   onMount(loadWatchlist);
 </script>

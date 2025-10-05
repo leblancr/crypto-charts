@@ -1,165 +1,119 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import Chart from "chart.js/auto";
 
   const API_BASE = "http://127.0.0.1:8000";
 
-  let watchlist = [];        // coins from backend
-  let prices = {};           // { coinOrId: price }
-  let selected = null;       // selected coin
-  let days = "30";           // bound to <select>
+  let watchlist = [];        // [{ticker, id}, …] from backend
+  let prices = {};           // { id: price }
+  let selected = null;       // selected coin (id)
+  let days = "30";           // chart range
   let canvas;
   let chart;
 
-  // Map tickers to CoinGecko IDs
-  const ID_MAP = {
-    ada: "cardano",
-    eth: "ethereum",
-    btc: "bitcoin",
-    bitcoin: "bitcoin",
-    cardano: "cardano",
-    ethereum: "ethereum"
-  };
-
-  // --- helpers to reduce 429s ---
-  let priceInterval = null;   // single timer for price polling
-  let loadingPrices = false;  // prevent overlapping requests
-  let loadingHistory = false;
-
-  function priceForButton(coin) {
-    const id = ID_MAP[coin?.toLowerCase()] || coin?.toLowerCase();
-    return prices[coin] ?? prices[id] ?? null;
-  }
-
-  // Load watchlist from backend (/watchlist/1)
+  // Load watchlist from backend
   async function loadWatchlist() {
     const resp = await fetch(`${API_BASE}/watchlist/1`);
     if (!resp.ok) {
       console.error("Failed to load watchlist:", await resp.text());
       return;
     }
-    const data = await resp.json();
-    watchlist = Array.isArray(data) ? data : (data.coins || []);
+    watchlist = await resp.json();
+    console.log("Watchlist from backend:", watchlist);
+
+    // Select first coin if none selected
     if (watchlist.length && !selected) {
-      selected = watchlist[0];
+      selected = watchlist[0].id;
       await loadChart(selected);
     }
+
+    await loadPrices();
   }
 
-  // Load current prices (polled once per minute)
+  // Load current prices
   async function loadPrices() {
-    if (!watchlist.length || loadingPrices) return;
-    loadingPrices = true;
-    try {
-      const symbols = watchlist.join(",");
-      const resp = await fetch(`${API_BASE}/coins/current?symbols=${symbols}`);
-      if (!resp.ok) {
-        if (resp.status === 429) {
-          console.warn("429 from /coins/current — skipping this cycle");
-          return;
-        }
-        console.error("Prices error:", resp.status, await resp.text());
-        return;
-      }
-      const data = await resp.json();
-      prices = {};
-      for (const [k, v] of Object.entries(data)) {
-        prices[k] = v.usd;
-      }
-    } catch (e) {
-      console.error("Network error fetching prices:", e);
-    } finally {
-      loadingPrices = false;
+    if (!watchlist.length) return;
+
+    // ✅ use CoinGecko IDs
+    const ids = watchlist.map(c => c.id).join(",");
+    const resp = await fetch(`${API_BASE}/coins/current?symbols=${ids}`);
+    if (!resp.ok) {
+      console.error("Failed to fetch prices:", await resp.text());
+      return;
     }
+    const data = await resp.json();
+
+    prices = {};
+    for (const [id, val] of Object.entries(data)) {
+      prices[id] = val.usd;
+    }
+    console.log("Prices object:", prices);
   }
 
   // Load history + draw chart
-  async function loadChart(symbol) {
-    if (!symbol || loadingHistory) return;
-    loadingHistory = true;
-    try {
-      const id = ID_MAP[symbol?.toLowerCase()] || symbol?.toLowerCase();
-      const resp = await fetch(`${API_BASE}/coins/${id}/history?days=${days}`);
-      if (!resp.ok) {
-        if (resp.status === 429) {
-          console.warn("429 from /coins/{id}/history — skipping");
-          return;
-        }
-        console.error("Failed to load history:", resp.status, await resp.text());
-        return;
-      }
-      const data = await resp.json();
-
-      const labels = data.map(d => new Date(d.timestamp).toLocaleString());
-      const values = data.map(d => d.price);
-
-      if (chart) chart.destroy();
-
-      chart = new Chart(canvas, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: (ID_MAP[symbol?.toLowerCase()] || symbol).toUpperCase() + " / USD",
-              data: values,
-              borderColor: "rgba(43, 245, 39, 0.75)",
-              backgroundColor: "rgba(54, 162, 235, 0.1)",
-              borderWidth: 2,
-              fill: true,
-              pointRadius: 0,
-              tension: 0.2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { title: { display: true, text: "Time" } },
-            y: { title: { display: true, text: "Price (USD)" } }
-          }
-        }
-      });
-    } catch (e) {
-      console.error("Network error loading history:", e);
-    } finally {
-      loadingHistory = false;
+  async function loadChart(id) {
+    const resp = await fetch(`${API_BASE}/coins/${id}/history?days=${days}`);
+    if (!resp.ok) {
+      console.error("Failed to load history:", await resp.text());
+      return;
     }
+    const data = await resp.json();
+
+    const labels = data.map(d => new Date(d.timestamp).toLocaleString());
+    const values = data.map(d => d.price);
+
+    if (chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: id.toUpperCase(),
+            data: values,
+            borderColor: "rgba(43, 245, 39, 0.75)",
+            backgroundColor: "rgba(54, 162, 235, 0.1)",
+            borderWidth: 2,
+            fill: true,
+            pointRadius: 0,
+            tension: 0.2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: "Time" } },
+          y: { title: { display: true, text: "Price (USD)" } }
+        }
+      }
+    });
   }
 
-  // User selects a coin
-  function selectCoin(coin) {
-    selected = coin;
-    loadChart(selected);   // one fetch per click
+  function selectCoin(id) {
+    selected = id;
+    loadChart(id);
   }
 
-  // on change of days
-  function changeDays(e) {
-    days = e.target.value;
+  function changeDays(event) {
+    days = event.target.value;
     if (selected) loadChart(selected);
   }
 
-  // ⬇️ this replaces the old reactive $: block
-  onMount(() => {
-    loadWatchlist();
-    loadPrices();
-    priceInterval = setInterval(loadPrices, 60000); // poll once per minute
-  });
-
-  onDestroy(() => {
-    if (priceInterval) clearInterval(priceInterval);
-  });
+  onMount(loadWatchlist);
 </script>
 
-<!-- ✅ Watchlist buttons -->
+<!-- Watchlist buttons -->
 <div style="margin-top:1rem;">
   {#each watchlist as coin}
     <button
-      class:selected={coin === selected}
-      on:click={() => selectCoin(coin)}
+      class:selected={coin.id === selected}
+      on:click={() => selectCoin(coin.id)}
+      style="margin-right: 0.5rem;"
     >
-      {coin.toUpperCase()} {#if priceForButton(coin)}${priceForButton(coin).toLocaleString()}{/if}
+      {coin.ticker.toUpperCase()}
+      {#if prices[coin.id]} ${prices[coin.id].toLocaleString()}{/if}
     </button>
   {/each}
 </div>
