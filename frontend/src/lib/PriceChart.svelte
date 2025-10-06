@@ -10,11 +10,20 @@
   let canvas: HTMLCanvasElement;
   let chart: Chart | null = null;
   let days = "30";
+  let errorMessage: string | null = null;
 
   async function loadChart() {
     if (!symbol) return;
     const resp = await fetch(`${API_BASE}/coins/${symbol}/history?days=${days}`);
-    if (!resp.ok) return;
+    if (!resp.ok) {
+      if (resp.status === 429) {
+        errorMessage = "⚠️ Too many requests — please wait a moment and try again.";
+      } else {
+        errorMessage = `⚠️ Error loading chart: ${resp.statusText}`;
+      }
+      return;
+    }
+    errorMessage = null; // clear previous errors when request succeeds
     const data = await resp.json();
 
     const labels = data.map((d: any) => new Date(d.timestamp).toLocaleString());
@@ -54,6 +63,12 @@
   $: if (symbol) loadChart();
 
 </script>
+
+{#if errorMessage}
+  <div style="margin:1rem; padding:0.5rem; background:#fee; color:#900; border:1px solid #c00; border-radius:6px;">
+    {errorMessage}
+  </div>
+{/if}
 
 <!-- Days dropdown -->
 <div style="margin-top: 1rem;">
