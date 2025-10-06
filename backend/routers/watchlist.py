@@ -7,13 +7,41 @@ import asyncio
 
 router = APIRouter()
 
-# Manual overrides for common tickers
-OVERRIDES = {
-    "btc": "bitcoin",
-    "eth": "ethereum",
-    "ada": "cardano"
-}
+# # Manual overrides for common tickers
+# OVERRIDES = {
+#     "btc": "bitcoin",
+#     "eth": "ethereum",
+#     "ada": "cardano"
+# }
 
+# add coin to watchlist
+@router.post("/{user_id}/{coin_id}")
+def add_coin_to_watchlist(user_id: int, coin_id: str, db: Session = Depends(get_db)):
+    exists = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coin_id).first()
+    if not exists:
+        db.add(Watchlist(
+            user_id=user_id,
+            ticker=coin_id.upper(),   # display
+            coingecko_id=coin_id      # actual CoinGecko ID
+        ))
+        db.commit()
+    return get_watchlist(user_id, db)
+
+@router.get("/{user_id}")
+def get_watchlist(user_id: int, db: Session = Depends(get_db)):
+    items = db.query(Watchlist).filter_by(user_id=user_id).all()
+    return [{"ticker": item.ticker, "id": item.coingecko_id} for item in items]
+
+
+@router.delete("/{user_id}/{coin_id}")
+def remove_coin_from_watchlist(user_id: int, coin_id: str, db: Session = Depends(get_db)):
+    # coin_id here is the CoinGecko ID (e.g. "bitcoin")
+    item = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coin_id).first()
+    if item:
+        db.delete(item)
+        db.commit()
+    return get_watchlist(user_id, db)
+#
 async def resolve_to_id(symbol: str) -> str:
     sym = symbol.lower()
     if sym in OVERRIDES:
@@ -28,30 +56,3 @@ async def resolve_to_id(symbol: str) -> str:
     return None
 
 
-@router.get("/{user_id}")
-def get_watchlist(user_id: int, db: Session = Depends(get_db)):
-    items = db.query(Watchlist).filter_by(user_id=user_id).all()
-    return [{"ticker": item.ticker, "id": item.coingecko_id} for item in items]
-
-
-@router.post("/{user_id}/{coin}")
-async def add_coin(user_id: int, coin: str, db: Session = Depends(get_db)):
-    coingecko_id = await resolve_to_id(coin)
-    if not coingecko_id:
-        return {"error": f"Unknown symbol {coin}"}
-
-    exists = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coingecko_id).first()
-    if not exists:
-        db.add(Watchlist(user_id=user_id, ticker=coin.lower(), coingecko_id=coingecko_id))
-        db.commit()
-    return get_watchlist(user_id, db)
-
-
-@router.delete("/{user_id}/{coin_id}")
-def remove_coin(user_id: int, coin_id: str, db: Session = Depends(get_db)):
-    # coin_id here is the CoinGecko ID (e.g. "bitcoin")
-    item = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coin_id).first()
-    if item:
-        db.delete(item)
-        db.commit()
-    return get_watchlist(user_id, db)

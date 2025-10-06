@@ -4,11 +4,11 @@ from backend.database import SessionLocal
 from backend.models import Watchlist
 
 # Manual overrides for common tickers → correct CoinGecko IDs
-OVERRIDES = {
-    "btc": "bitcoin",
-    "eth": "ethereum",
-    "ada": "cardano",
-}
+# OVERRIDES = {
+#     "btc": "bitcoin",
+#     "eth": "ethereum",
+#     "ada": "cardano",
+# }
 
 async def load_symbol_map():
     """Fetch symbol → id mapping from CoinGecko."""
