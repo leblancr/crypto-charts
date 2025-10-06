@@ -3,6 +3,7 @@
   import Chart from "chart.js/auto";
 
   export let symbol: string;   // 👈 this is the prop from +page.svelte
+  export let ticker: string | null;
 
   const API_BASE = "http://127.0.0.1:8000";
 
@@ -26,7 +27,7 @@
         labels,
         datasets: [
           {
-            label: symbol.toUpperCase(),
+            label: ticker ? `${ticker.toUpperCase()} / ${symbol}` : symbol.toUpperCase(),
             data: values,
             borderColor: "rgba(43,245,39,0.75)",
             backgroundColor: "rgba(54,162,235,0.1)",

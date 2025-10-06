@@ -146,5 +146,5 @@
 
 <!-- Chart -->
 {#if selected}
-  <PriceChart symbol={selected}/>
+  <PriceChart symbol={selected} ticker={watchlist.find(c => c.id === selected)?.ticker}/>
 {/if}
