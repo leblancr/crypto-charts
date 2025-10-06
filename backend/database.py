@@ -2,7 +2,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"  # adjust to your DB
-SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://rich:reddpos@localhost:5432/crypto_db"
+# local:
+# SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://rich:reddpos@localhost:5432/crypto_db"
+
+# skyebeau:
+SQLALCHEMY_DATABASE_URL = "postgresql://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db"
+
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 

@@ -1,13 +1,14 @@
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# import your DB URL and Base
+from backend.database import Base, SQLALCHEMY_DATABASE_URL
+from backend import models  # makes sure models are registered
+
 config = context.config
+config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 # Logging
 if config.config_file_name is not None:
