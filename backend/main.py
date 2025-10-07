@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from backend.routers import watchlist, coins
+from backend.routers import watchlist, coins, auth
 
 app = FastAPI()
 
@@ -15,8 +15,12 @@ app.add_middleware(
 )
 
 # Routers
+# Grouped resources
 app.include_router(watchlist.router, prefix="/watchlist", tags=["watchlist"])
 app.include_router(coins.router, prefix="/coins", tags=["coins"])
+
+# Global actions (no prefix)
+app.include_router(auth.router, tags=["auth"])
 
 # ✅ Serve compiled Svelte from dist/
 # app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
