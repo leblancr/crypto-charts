@@ -10,36 +10,6 @@
 
   const API_BASE = "http://127.0.0.1:8000";
 
-  async function loadTopCoins() {
-    const resp = await fetch(`${API_BASE}/coins/top50`);
-    if (resp.ok) topCoins = await resp.json();
-  }
-
-  async function loadWatchlist() {
-    const resp = await authFetch(`/watchlist`);
-    if (resp.ok) {
-      watchlist = await resp.json();
-      if (watchlist.length > 0 && !selected) {
-        selected = watchlist[0].coingecko_id;
-        dispatch("coinSelected", selected);
-      }
-      await updateWatchlistWithPrices();
-    }
-  }
-
-  async function updateWatchlistWithPrices() {
-    if (!watchlist.length) return;
-    const ids = watchlist.map(c => c.coingecko_id).join(",");
-    const resp = await fetch(`${API_BASE}/coins/current?symbols=${ids}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      watchlist = watchlist.map(c => ({
-        ...c,
-        price: data[c.id]?.usd || null
-      }));
-    }
-  }
-
   async function addCoinToWatchlist() {
     if (!newCoin) return;
     const resp = await authFetch(`/watchlist/${newCoin}`, { method: "POST" });
@@ -58,11 +28,47 @@
     }
   }
 
+  async function loadTopCoins() {
+    const resp = await fetch(`${API_BASE}/coins/top50`);
+    if (resp.ok) topCoins = await resp.json();
+  }
+
+  async function loadWatchlist() {
+    const resp = await authFetch(`/watchlist`);
+    if (resp.ok) {
+      watchlist = await resp.json();
+      console.log("Updated watchlist:", watchlist);  // ⬅ check after remove
+      if (watchlist.length > 0 && !selected) {
+        selected = watchlist[0].coingecko_id;
+        dispatch("coinSelected", selected);
+      }
+      await updateWatchlistWithPrices();
+    }
+  }
+
+  async function updateWatchlistWithPrices() {
+    if (!watchlist.length) return;
+    const ids = watchlist.map(c => c.coingecko_id).join(",");
+    const resp = await fetch(`${API_BASE}/coins/current?symbols=${ids}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      watchlist = watchlist.map(c => ({
+        ...c,
+        price: data[c.coingecko_id]?.usd || null
+      }));
+    }
+  }
+
   async function removeCoinFromWatchlist() {
     if (!selected) return;
-    await authFetch(`/watchlist/${USER_ID}/${selected}`, { method: "DELETE" });
-    selected = null;
-    await loadWatchlist();
+    const resp = await authFetch(`/watchlist/${selected}`, { method: "DELETE" });  // ✅ resp is defined
+    if (resp.ok) {
+      console.log(`${selected} removed`);
+      selected = null;
+      await loadWatchlist();   // refreshes UI
+    } else {
+      console.error("Remove failed:", await resp.text());
+    }
   }
 
   onMount(() => {
