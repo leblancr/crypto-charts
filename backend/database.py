@@ -9,7 +9,15 @@ from sqlalchemy.orm import declarative_base
 # DATABASE_URL = "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_db"
 #
 # Remote Postgres with SSL:
-DATABASE_URL = "postgresql+asyncpg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?ssl=require"
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?ssl=require"
+DATABASE_URL = SQLALCHEMY_DATABASE_URL
+
+# For Alembic (psycopg2)
+SQLALCHEMY_SYNC_DATABASE_URL = (
+    SQLALCHEMY_DATABASE_URL
+    .replace("+asyncpg", "+psycopg2")
+    .replace("?ssl=require", "?sslmode=require")
+)
 
 # Create async engine
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)

@@ -13,7 +13,7 @@ class Watchlist(Base):
     __tablename__ = "watchlist"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    ticker = Column(String, index=True)         # short symbol, e.g. "eth"
+    # ticker = Column(String, index=True)         # short symbol, e.g. "eth"
     coingecko_id = Column(String, index=True)   # full ID, e.g. "ethereum"
 
 

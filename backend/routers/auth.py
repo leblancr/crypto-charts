@@ -1,18 +1,27 @@
 # backend/routers/auth.py
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from backend.crud import create_user, authenticate_user
+from backend.crud import authenticate_user
 from backend.config import JWT_SECRET
 from backend.database import get_db
 from backend.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta
-from passlib.hash import argon2
-
+from passlib.context import CryptContext
 import jwt
 
 router = APIRouter()
+
+# ✅ Global password context — register & login both use this
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(password: str, hashed: str) -> bool:
+    return pwd_context.verify(password, hashed)
+
 
 class UserCreate(BaseModel):
     username: str
@@ -22,15 +31,18 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+
 @router.post("/login")
 async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
-    db_user = await authenticate_user(user.username, user.password, db)
-    if not db_user:
+    result = await db.execute(select(User).filter_by(username=user.username))
+    db_user = result.scalar_one_or_none()
+    if not db_user or not verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     payload = {"sub": db_user.username, "exp": datetime.utcnow() + timedelta(hours=12)}
     token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
     return {"access_token": token, "token_type": "bearer"}
+
 
 @router.post("/register")
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -40,22 +52,11 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
 
-    # normalize and validate password
-    password = str(user.password)
-    if isinstance(password, bytes):
-        password = password.decode("utf-8")
-    if not isinstance(password, str):
-        raise HTTPException(status_code=400, detail="Password must be a string")
-
-    if len(password.encode("utf-8")) > 72:
-        password = password[:72]  # bcrypt hard limit
-
     # hash password
-    hashed_password = argon2.hash(password)
+    hashed_password = hash_password(user.password)
 
     # create user
     db_user = User(username=user.username, password_hash=hashed_password)
     db.add(db_user)
     await db.commit()
     return {"msg": "User created"}
-

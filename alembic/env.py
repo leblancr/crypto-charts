@@ -4,11 +4,12 @@ from sqlalchemy import pool
 from alembic import context
 
 # import your DB URL and Base
-from backend.database import Base, SQLALCHEMY_DATABASE_URL
+from backend.database import Base, SQLALCHEMY_SYNC_DATABASE_URL
 from backend import models  # makes sure models are registered
 
 config = context.config
-config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", SQLALCHEMY_SYNC_DATABASE_URL)
+target_metadata = Base.metadata
 
 # Logging
 if config.config_file_name is not None:

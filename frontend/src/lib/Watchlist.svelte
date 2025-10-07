@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
+  import { authFetch } from "$lib/authFetch";
   const dispatch = createEventDispatcher();
 
   let watchlist: any[] = [];
@@ -8,7 +9,6 @@
   let selected: string | null = null;
 
   const API_BASE = "http://127.0.0.1:8000";
-  const USER_ID = 1;
 
   async function loadTopCoins() {
     const resp = await fetch(`${API_BASE}/coins/top50`);
@@ -16,7 +16,7 @@
   }
 
   async function loadWatchlist() {
-    const resp = await fetch(`${API_BASE}/watchlist/${USER_ID}`);
+    const resp = await authFetch(`/watchlist`);
     if (resp.ok) {
       watchlist = await resp.json();
       if (watchlist.length > 0 && !selected) {
@@ -42,14 +42,25 @@
 
   async function addCoinToWatchlist() {
     if (!newCoin) return;
-    await fetch(`${API_BASE}/watchlist/${USER_ID}/${newCoin}`, { method: "POST" });
-    newCoin = "";
-    await loadWatchlist();
+    const resp = await authFetch(`/watchlist/${newCoin}`, { method: "POST" });
+    const data = await resp.json();
+
+    if (resp.ok) {
+      if (data.detail.includes("already")) {
+        console.log(data.detail); // or show a message in the UI
+      } else {
+        console.log(data.detail); // "BITCOIN added"
+      }
+      newCoin = "";
+      await loadWatchlist();   // always refresh UI
+    } else {
+      console.error("Add failed:", data);
+    }
   }
 
   async function removeCoinFromWatchlist() {
     if (!selected) return;
-    await fetch(`${API_BASE}/watchlist/${USER_ID}/${selected}`, { method: "DELETE" });
+    await authFetch(`/watchlist/${USER_ID}/${selected}`, { method: "DELETE" });
     selected = null;
     await loadWatchlist();
   }
