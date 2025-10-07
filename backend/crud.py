@@ -1,9 +1,9 @@
-from sqlalchemy.orm import Session
-from .models import User, Watchlist, CryptoPrice
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from backend.models import User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def add_to_watchlist(db: Session, user_id: int, coingecko_id: str):
     coingecko_id = coingecko_id.lower()
@@ -56,3 +56,37 @@ def remove_from_watchlist(db: Session, user_id: int, coingecko_id: str):
     db.delete(item)
     db.commit()
     return {"detail": f"{coingecko_id.upper()} removed"}
+
+def hash_password(password: str) -> str:
+    return _pwd_ctx.hash(password)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return _pwd_ctx.verify(plain, hashed)
+
+async def create_user(username: str, password: str, db: AsyncSession) -> bool:
+    result = await db.execute(select(User).filter_by(username=username))
+    existing = result.scalars().first()
+    if existing:
+        return False
+
+    user = User(username=username, password_hash=hash_password(password))
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return True
+
+async def authenticate_user(
+    username: str,
+    password: str | None,
+    db: AsyncSession,
+    *,
+    check_password: bool = True,
+):
+    result = await db.execute(select(User).filter_by(username=username))
+    user = result.scalars().first()
+    if not user:
+        return None
+    if check_password:
+        if password is None or not verify_password(password, user.password_hash):
+            return None
+    return user

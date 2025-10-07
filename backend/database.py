@@ -1,5 +1,5 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
 # Example connection strings:
 # Local SQLite:
@@ -15,9 +15,7 @@ DATABASE_URL = "postgresql+asyncpg://crypto_dashboard_user:reddcry@skyebeau.com:
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 
 # Session factory for async sessions
-AsyncSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
+SessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -28,5 +26,5 @@ Base = declarative_base()
 
 # Dependency for FastAPI routes
 async def get_db():
-    async with AsyncSessionLocal() as session:
+    async with SessionLocal() as session:
         yield session

@@ -1,24 +1,32 @@
-# backend/auth_utils.py
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from .crud import authenticate_user
-from .db import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
+from jose import jwt, JWTError
+from backend.crud import authenticate_user
+from backend.database import get_db
+from backend.models import User
+from backend.config import JWT_SECRET
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        yield db
-    finally:
-        db.close()
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
 
-# Dummy current user function (replace with JWT logic later)
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    # For now, just return a test user or look up by token
-    user = db.query(User).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid authentication")
+    user = await authenticate_user(username, None, db, check_password=False)
+    if user is None:
+        raise credentials_exception
     return user

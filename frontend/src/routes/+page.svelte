@@ -9,6 +9,13 @@
   let topCoins = [];
   let newCoin = "";
 
+  let showAuthModal = false;
+  let isRegister = false; // toggle between login/register
+  let username = "";
+  let password = "";
+  let token: string | null = null;
+  let currentUser: string | null = null;
+
   const API_BASE = "http://127.0.0.1:8000";
   const USER_ID = 1;
 
@@ -37,7 +44,6 @@
     } catch (err) {
       console.error("Error fetching watchlist:", err);
     }
-    await updateWatchlistWithPrices();
   }
 
   async function removeCoinFromWatchlist() {
@@ -66,13 +72,90 @@
     }));
   }
 
+  async function registerUser() {
+    const resp = await fetch(`${API_BASE}/users/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    if (resp.ok) {
+      alert("User created, now log in!");
+    } else {
+      const err = await resp.json();
+      errorMessage = "Register failed: " + err.detail;
+    }
+  }
+
+  async function loginUser() {
+    const resp = await fetch(`${API_BASE}/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      token = data.access_token;
+      currentUser = username;
+      localStorage.setItem("token", token);
+      localStorage.setItem("username", username);
+    } else {
+      const err = await resp.json();
+      errorMessage = "Login failed: " + err.detail;
+    }
+  }
+
+  async function handleAuth() {
+    const endpoint = isRegister ? "signup" : "login";
+    const resp = await fetch(`${API_BASE}/users/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    if (resp.ok) {
+      if (isRegister) {
+        alert("User created, now log in!");
+        isRegister = false;
+      } else {
+        const data = await resp.json();
+        token = data.access_token;
+        currentUser = username;
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", username);
+        showAuthModal = false;
+      }
+    } else {
+      const err = await resp.json();
+      errorMessage = (isRegister ? "Register" : "Login") + " failed: " + err.detail;
+    }
+  }
+
+  function logoutUser() {
+    token = null;
+    currentUser = null;
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+  }
+
+
   // ✅ run when the page loads
   onMount(() => {
+    token = localStorage.getItem("token");
+    currentUser = localStorage.getItem("username");
+
     loadTopCoins();
     loadWatchlist();
   });
 
 </script>
+<div style="position: absolute; top: 10px; right: 10px;">
+  {#if currentUser}
+    <span>Welcome, {currentUser}</span>
+    <a href="#" on:click={logoutUser} style="margin-left: 10px;">Logout</a>
+  {:else}
+    <a href="#" on:click={() => { isRegister = false; showAuthModal = true }}>Login</a>
+    <a href="#" on:click={() => { isRegister = true; showAuthModal = true }} style="margin-left: 10px;">Register</a>
+  {/if}
+</div>
 
 <h1 style="text-align: center; color: blue;">Crypto Dashboard</h1>
 
@@ -143,8 +226,25 @@
   {/each}
 </div>
 
-
 <!-- Chart -->
 {#if selected}
   <PriceChart symbol={selected} />
 {/if}
+
+{#if showAuthModal}
+  <div style="
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    display:flex; align-items:center; justify-content:center;
+  ">
+    <div style="background:#fff; padding:20px; border-radius:8px; min-width:250px;">
+      <h3 style="margin-top:0;">{isRegister ? "Register" : "Login"}</h3>
+      <input placeholder="Username" bind:value={username} style="display:block; margin:0.5rem 0; width:100%;" />
+      <input type="password" placeholder="Password" bind:value={password} style="display:block; margin:0.5rem 0; width:100%;" />
+      <button on:click={handleAuth}>{isRegister ? "Register" : "Login"}</button>
+      <button on:click={() => showAuthModal = false} style="margin-left:10px;">Cancel</button>
+    </div>
+  </div>
+{/if}
+
