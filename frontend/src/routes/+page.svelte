@@ -31,7 +31,7 @@
       const resp = await fetch(`${API_BASE}/watchlist/${USER_ID}`);
       watchlist = await resp.json();
       if (watchlist.length > 0 && !selected) {
-        selected = watchlist[0].id;
+        selected = watchlist[0].coingecko_id;   // ✅ use coingecko_id
       }
       await updateWatchlistWithPrices();   // <-- fetch prices after watchlist
     } catch (err) {
@@ -50,7 +50,7 @@
   async function updateWatchlistWithPrices() {
     if (!watchlist.length) return;
 
-    const ids = watchlist.map(c => c.id).join(",");
+    const ids = watchlist.map(c => c.coingecko_id).join(",");
     const resp = await fetch(`${API_BASE}/coins/current?symbols=${ids}`);
     if (!resp.ok) {
       console.error("Failed to fetch prices:", await resp.text());
@@ -133,11 +133,11 @@
 <div style="margin-top:1rem;">
   {#each watchlist as coin}
     <button
-      class:selected={coin.id === selected}
-      on:click={() => (selected = coin.id)}
+      class:selected={coin.coingecko_id === selected}
+      on:click={() => (selected = coin.coingecko_id)}
       style="margin-right:0.5rem;"
     >
-      {coin.ticker.toUpperCase()}
+      {coin.coingecko_id.toUpperCase()}
       {#if coin.price} ${coin.price.toLocaleString()}{/if}
     </button>
   {/each}
@@ -146,5 +146,5 @@
 
 <!-- Chart -->
 {#if selected}
-  <PriceChart symbol={selected} ticker={watchlist.find(c => c.id === selected)?.ticker}/>
+  <PriceChart symbol={selected} />
 {/if}

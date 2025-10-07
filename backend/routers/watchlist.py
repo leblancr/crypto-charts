@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from backend.database import get_db
 from backend.models import Watchlist
-import httpx
-import asyncio
 
 router = APIRouter()
 
@@ -15,32 +14,54 @@ router = APIRouter()
 # }
 
 # add coin to watchlist
-@router.post("/{user_id}/{coin_id}")
-def add_coin_to_watchlist(user_id: int, coin_id: str, db: Session = Depends(get_db)):
-    exists = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coin_id).first()
-    if not exists:
-        db.add(Watchlist(
-            user_id=user_id,
-            ticker=coin_id.upper(),   # display
-            coingecko_id=coin_id      # actual CoinGecko ID
-        ))
-        db.commit()
-    return get_watchlist(user_id, db)
+@router.post("/{user_id}/{coingecko_id}")
+async def add_coin_to_watchlist(
+    user_id: int, coingecko_id: str, db: AsyncSession = Depends(get_db)
+):
+    coingecko_id = coingecko_id.lower()
+    result = await db.execute(
+        select(Watchlist).filter_by(user_id=user_id, coingecko_id=coingecko_id)
+    )
+    existing = result.scalars().first()
+
+    if existing:
+        return {"detail": f"{coingecko_id.upper()} already in watchlist"}
+
+    item = Watchlist(user_id=user_id, coingecko_id=coingecko_id)
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    return {"detail": f"{coingecko_id.upper()} added"}
 
 @router.get("/{user_id}")
-def get_watchlist(user_id: int, db: Session = Depends(get_db)):
-    items = db.query(Watchlist).filter_by(user_id=user_id).all()
-    return [{"ticker": item.ticker, "id": item.coingecko_id} for item in items]
+async def get_watchlist(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Watchlist).filter_by(user_id=user_id))
+    items = result.scalars().all()
+    return [
+        {
+            "id": item.id,                # database row id
+            "coingecko_id": item.coingecko_id  # coin id for CoinGecko API
+        }
+        for item in items
+    ]
 
+@router.delete("/{user_id}/{coingecko_id}")
+async def remove_coin_from_watchlist(
+    user_id: int, coingecko_id: str, db: AsyncSession = Depends(get_db)
+):
+    coingecko_id = coingecko_id.lower()
+    result = await db.execute(
+        select(Watchlist).filter_by(user_id=user_id, coingecko_id=coingecko_id)
+    )
+    item = result.scalars().first()
 
-@router.delete("/{user_id}/{coin_id}")
-def remove_coin_from_watchlist(user_id: int, coin_id: str, db: Session = Depends(get_db)):
-    # coin_id here is the CoinGecko ID (e.g. "bitcoin")
-    item = db.query(Watchlist).filter_by(user_id=user_id, coingecko_id=coin_id).first()
-    if item:
-        db.delete(item)
-        db.commit()
-    return get_watchlist(user_id, db)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"{coingecko_id.upper()} not in watchlist")
+
+    await db.delete(item)
+    await db.commit()
+    return {"detail": f"{coingecko_id.upper()} removed"}
+
 #
 async def resolve_to_id(symbol: str) -> str:
     sym = symbol.lower()
