@@ -15,8 +15,8 @@
   function handleLoginSuccess(e) {
     token = e.detail.token;
     currentUser = e.detail.username;
-    localStorage.setItem("token", token);
-    localStorage.setItem("username", currentUser);
+    localStorage.setItem("token", e.detail.token);
+    localStorage.setItem("username", e.detail.username);
     showAuthModal = false;     // ✅ hide after login
   }
 
