@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+from passlib.exc import UnknownHashError
+from passlib.hash import argon2
+
 import jwt
 
 router = APIRouter()
@@ -20,8 +23,14 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    try:
+        return pwd_context.verify(password, hashed)
+    except UnknownHashError:
+        return False
 
+class ResetPasswordRequest(BaseModel):
+    username: str
+    new_password: str
 
 class UserCreate(BaseModel):
     username: str
@@ -60,3 +69,19 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(db_user)
     await db.commit()
     return {"msg": "User created"}
+
+@router.post("/reset-password-direct")
+async def reset_password_direct(payload: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    # 1. Look up the user
+    result = await db.execute(select(User).where(User.username == payload.username))
+    user = result.scalar_one_or_none()
+
+    # 2. If not found → clear error
+    if not user:
+        raise HTTPException(status_code=404, detail="User does not exist")
+
+    # 3. Update password hash
+    user.password_hash = argon2.hash(payload.new_password)
+    await db.commit()
+
+    return {"msg": "Password updated successfully"}

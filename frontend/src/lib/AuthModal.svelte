@@ -1,68 +1,129 @@
+<!-- FILE: src/lib/AuthModal.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
   export let isRegister = false;
+  let mode: "login" | "register" | "forgot" = isRegister ? "register" : "login";
+
   let username = "";
   let password = "";
+  let newPassword = "";
   let errorMessage: string | null = null;
+  let message: string | null = null;
 
   const API_BASE = "http://127.0.0.1:8000";
 
   async function handleAuth() {
-    const endpoint = isRegister ? "register" : "login";
+    const endpoint = mode === "register" ? "register" : "login";
     const resp = await fetch(`${API_BASE}/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
     });
+
     if (resp.ok) {
-      if (isRegister) {
-        alert("User created, now log in!");
+      if (mode === "register") {
+        message = "User created, now log in!";
+        mode = "login";
       } else {
         const data = await resp.json();
         dispatch("loginSuccess", { token: data.access_token, username });
+        dispatch("close");
       }
       errorMessage = null;
     } else {
       const err = await resp.json();
-      errorMessage = (isRegister ? "Register" : "Login") + " failed: " + err.detail;
+      errorMessage = err.detail || "Authentication failed";
     }
   }
+
+  async function handleReset() {
+    const resp = await fetch(`${API_BASE}/reset-password-direct`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, new_password: newPassword })
+    });
+    if (resp.ok) {
+      message = "Password updated. You can log in with the new password.";
+      mode = "login";
+      errorMessage = null;
+    } else {
+      const err = await resp.json();
+      errorMessage = err.detail || "Reset failed";
+    }
+  }
+
+  function switchMode(newMode: "login" | "register" | "forgot") {
+    mode = newMode;
+    errorMessage = null;
+    message = null;
+    username = "";
+    password = "";
+    newPassword = "";
+  }
+
 </script>
 
-<div style="
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5); /* dark backdrop */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-">
-  <div style="
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    min-width: 200px;
-    max-width: 300px;
-    width: 100%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  ">
-    <h3>{isRegister ? "Register" : "Login"}</h3>
+<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:9999;">
+  <div class="modal" style="padding:1rem;border:1px solid #ccc;border-radius:8px;background:#fff;max-width:380px;">
+    {#if mode === "login"}
+      <h2>Login</h2>
+      <div>
+        <input type="text" bind:value={username} placeholder="Username" style="display:block;margin-bottom:0.5rem;" />
+        <input type="password" bind:value={password} placeholder="Password" style="display:block;margin-bottom:0.5rem;" />
+      </div>
+      <button on:click={handleAuth}>Login</button>
 
-    <input placeholder="Username" bind:value={username} style="display:block; margin:0.5rem 0; width:100%;" />
-    <input type="password" placeholder="Password" bind:value={password} style="display:block; margin:0.5rem 0; width:100%;" />
+      {#if errorMessage}
+        <p style="color:red;">{errorMessage}</p>
+        <div style="margin-top:0.5rem;">
+          <a on:click={() => switchMode("forgot")} style="color:blue;cursor:pointer;">
+            Forgot password?
+          </a>
+        </div>
+      {/if}
 
-    <button on:click={handleAuth}>
-      {isRegister ? "Register" : "Login"}
-    </button>
-    <button on:click={() => dispatch("close")} style="margin-left: 10px;">
-      Cancel
-    </button>
+      {#if message}
+        <p style="color:green;">{message}</p>
+      {/if}
+    {:else if mode === "register"}
+      <h2>Register</h2>
+        <div style="margin-top:.5rem;">
+          <a on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
+            Already have an account? Login
+          </a>
+        </div>
+      <button on:click={handleAuth}>Register</button>
+
+      {#if errorMessage}<p style="color:red;">{errorMessage}</p>{/if}
+      {#if message}<p style="color:green;">{message}</p>{/if}
+
+      <div style="margin-top:.5rem;">
+        <a on:click={() => mode="login"} style="color:blue;cursor:pointer;">
+          Already have an account? Login
+        </a>
+      </div>
+
+    {:else if mode === "forgot"}
+      <h2>Reset Password</h2>
+      <div>
+        <input type="text" bind:value={username} placeholder="Username" style="display:block;margin-bottom:0.5rem;" />
+        <input type="password" bind:value={newPassword} placeholder="New Password" style="display:block;margin-bottom:0.5rem;" />
+      </div>
+      <button on:click={handleReset}>Update password</button>
+
+      {#if errorMessage}<p style="color:red;">{errorMessage}</p>{/if}
+      {#if message}<p style="color:green;">{message}</p>{/if}
+
+      <div style="margin-top:.5rem;">
+        <a on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
+          Back to login
+        </a>
+      </div>
+    {/if}
+    <button on:click={() => dispatch("close")}>Close</button>
   </div>
 </div>
+
