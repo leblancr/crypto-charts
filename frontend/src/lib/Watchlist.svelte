@@ -102,3 +102,5 @@
     </button>
   {/each}
 </div>
+
+<!-- <pre>{JSON.stringify(watchlist, null, 2)}</pre> -->

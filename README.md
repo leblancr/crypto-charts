@@ -32,3 +32,5 @@ npm install
 Start the dev server:
 cd /common/projects/python/crypto-dashboard/frontend
 npm run dev
+
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJza3llIiwiZXhwIjoxNzU5OTMzNDcyfQ.Pl4PnjkZu8bt5ufYtm0NsAHRUlEgPdSYJHUx56Osm18"

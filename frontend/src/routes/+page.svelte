@@ -14,6 +14,11 @@
   let isRegister = false;
   let username: string = "";
   let password: string = "";
+  let watchlistRef: any;
+
+  export function refresh() {
+    loadWatchlist();
+  }
 
   function handleLoginSuccess(e) {
     token = e.detail.token;
@@ -21,6 +26,7 @@
     localStorage.setItem("token", token);
     localStorage.setItem("username", currentUser);
     showAuthModal = false;
+    watchlistRef.refresh();
   }
 
   function logout() {

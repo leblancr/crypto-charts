@@ -36,6 +36,7 @@ async def add_coin_to_watchlist(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    print(f" POST /watchlist/{coingecko_id} by user {current_user.id}")
     coingecko_id = coingecko_id.lower()
     result = await db.execute(
         select(Watchlist).filter_by(user_id=current_user.id, coingecko_id=coingecko_id)
