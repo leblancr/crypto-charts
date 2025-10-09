@@ -5,6 +5,11 @@
   import Watchlist from "$lib/Watchlist.svelte";
   import PriceChart from "$lib/PriceChart.svelte";
 
+  import svelteLogo from "$lib/assets/32px-Svelte_Logo.svg";
+  import fastapiLogo from "$lib/assets/32px-fastapi-logo.png";
+  import postgresLogo from "$lib/assets/32px-Postgresql_elephant.svg";
+  import freebsdLogo from "$lib/assets/32x32freebsd-logo.png";
+
   let token: string | null = null;
   let currentUser: string | null = null;
   let selected: string | null = null;
@@ -47,6 +52,34 @@
     {/if}
   </div>
 </div>
+
+<footer class="corner-icons">
+  <img src={svelteLogo} alt="Svelte" class="corner-icon" />
+  <img src={fastapiLogo} alt="Fastapi" class="corner-icon" />
+  <img src={postgresLogo} alt="PostgreSQL" class="corner-icon" />
+  <img src={freebsdLogo} alt="FreeBSD" class="corner-icon" />
+</footer>
+
+<style>
+  .corner-icons {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .corner-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.85;
+  }
+
+  .corner-icon:hover {
+    opacity: 1;
+  }
+</style>
+
 
 <!-- Auth modal shows ONLY when user clicks Login/Register -->
 {#if showAuthModal}
