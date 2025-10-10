@@ -5,7 +5,7 @@
   export let symbol: string;   // 👈 this is the prop from +page.svelte
   export let ticker: string | null;
 
-  const API_BASE = "http://127.0.0.1:8000";
+  const API_BASE = import.meta.env.VITE_API_BASE;
 
   let canvas: HTMLCanvasElement;
   let chart: Chart | null = null;

@@ -29,8 +29,18 @@ npx sv create .
 Install dependencies:
 npm install
 
-Start the dev server:
+Start the dev server (local):
 cd /common/projects/python/crypto-dashboard/frontend
 npm run dev
 
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJza3llIiwiZXhwIjoxNzU5OTMzNDcyfQ.Pl4PnjkZu8bt5ufYtm0NsAHRUlEgPdSYJHUx56Osm18"
+VPS:
+So the very first time (or after new deps are added):
+cd /srv/crypto-dashboard/frontend
+npm install
+npm run build
+
+After that
+If you only change frontend source (no new libraries), you just:
+git pull
+npm run build
+You don’t need npm install every time.
