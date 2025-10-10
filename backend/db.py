@@ -1,12 +1,43 @@
-# db.py
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from .models import Base
+# FILE: backend/db.py
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
-DATABASE_URL = "postgresql+psycopg2://rich:reddpos@localhost:5432/crypto_db"
+# Local Postgres
+# DATABASE_URL = "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_db"
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+# Remote Postgres with SSL
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?ssl=require"
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Use asyncpg for async access
+DATABASE_URL = SQLALCHEMY_DATABASE_URL
+
+# Optional: sync URL (for Alembic migrations)
+SQLALCHEMY_SYNC_DATABASE_URL = (
+    SQLALCHEMY_DATABASE_URL
+    .replace("+asyncpg", "+psycopg2")
+    .replace("?ssl=require", "?sslmode=require")
+)
+
+# Async engine
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_pre_ping=True,   # ✅ prevents stale connections
+    pool_recycle=180,     # recycle every 3 minutes
+    future=True,
+)
+
+# Session factory (async)
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+# Declarative base for models
+Base = declarative_base()
+
+# Dependency for FastAPI
+async def get_db():
+    async with SessionLocal() as session:
+        yield session

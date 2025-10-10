@@ -79,9 +79,9 @@
       {#if errorMessage}
         <p style="color:red;">{errorMessage}</p>
         <div style="margin-top:0.5rem;">
-          <a on:click={() => switchMode("forgot")} style="color:blue;cursor:pointer;">
+          <button type="button" on:click={() => switchMode("forgot")} style="color:blue;cursor:pointer;background:none;border:none;padding:0;">
             Forgot password?
-          </a>
+          </button>
         </div>
       {/if}
 
@@ -91,9 +91,9 @@
     {:else if mode === "register"}
       <h2>Register</h2>
         <div style="margin-top:.5rem;">
-          <a on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
+          <button type="button" on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
             Already have an account? Login
-          </a>
+          </button>
         </div>
       <button on:click={handleAuth}>Register</button>
 
@@ -101,9 +101,9 @@
       {#if message}<p style="color:green;">{message}</p>{/if}
 
       <div style="margin-top:.5rem;">
-        <a on:click={() => mode="login"} style="color:blue;cursor:pointer;">
+        <button type="button" on:click={() => mode="login"} style="color:blue;cursor:pointer;">
           Already have an account? Login
-        </a>
+        </button>
       </div>
 
     {:else if mode === "forgot"}
@@ -118,9 +118,9 @@
       {#if message}<p style="color:green;">{message}</p>{/if}
 
       <div style="margin-top:.5rem;">
-        <a on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
+        <button type="button" on:click={() => switchMode("login")} style="color:blue;cursor:pointer;background:none;border:none;padding:0;">
           Back to login
-        </a>
+        </button>
       </div>
     {/if}
     <button on:click={() => dispatch("close")}>Close</button>

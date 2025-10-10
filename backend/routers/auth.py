@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from backend.crud import authenticate_user
 from backend.config import JWT_SECRET
-from backend.database import get_db
+from backend.db import get_db
 from backend.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
