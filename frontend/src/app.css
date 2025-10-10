@@ -38,6 +38,18 @@ pre {
   border-radius: 6px;
 }
 
+input {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--accent);
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+input::placeholder {
+  color: #888; /* softer gray for placeholders */
+}
+
 .card {
   background: var(--card-bg);
   padding: 1rem;

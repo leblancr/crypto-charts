@@ -70,11 +70,11 @@
   }
 
   .corner-icon {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     opacity: 0.85;
   }
-
+k
   .corner-icon:hover {
     opacity: 1;
   }

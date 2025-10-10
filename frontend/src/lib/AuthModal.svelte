@@ -67,7 +67,7 @@
 </script>
 
 <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:9999;">
-  <div class="modal" style="padding:1rem;border:1px solid #ccc;border-radius:8px;background:#fff;max-width:380px;">
+  <div class="modal" style="padding:1rem;border:1px solid #ccc;border-radius:8px;max-width:380px;">
     {#if mode === "login"}
       <h2>Login</h2>
       <div>
