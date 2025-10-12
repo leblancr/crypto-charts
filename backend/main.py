@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.routers import watchlist, coins, auth
 from contextlib import asynccontextmanager
-from .db import engine
+from .database import engine
 from .models import Base
 
 @asynccontextmanager

@@ -44,3 +44,9 @@ If you only change frontend source (no new libraries), you just:
 git pull
 npm run build
 You don’t need npm install every time.
+
+Or:
+npm run build
+npm run preview
+
+

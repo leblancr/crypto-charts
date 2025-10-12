@@ -34,15 +34,23 @@
   }
 
   async function loadWatchlist() {
-    const resp = await authFetch(`/watchlist`);
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE}/watchlist/`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
     if (resp.ok) {
       watchlist = await resp.json();
-      console.log("Updated watchlist:", watchlist);  // ⬅ check after remove
+      console.log("Updated watchlist:", watchlist);
       if (watchlist.length > 0 && !selected) {
         selected = watchlist[0].coingecko_id;
         dispatch("coinSelected", selected);
       }
       await updateWatchlistWithPrices();
+    } else {
+      console.error("Load failed:", resp.status, await resp.text());
     }
   }
 
