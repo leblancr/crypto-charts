@@ -1,6 +1,7 @@
 <!-- FILE: src/lib/AuthModal.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
+  import { API_BASE } from "$lib/constants";
 
   const dispatch = createEventDispatcher();
 
@@ -12,8 +13,6 @@
   let newPassword = "";
   let errorMessage: string | null = null;
   let message: string | null = null;
-
-  const API_BASE = import.meta.env.VITE_API_BASE;
 
   async function handleAuth() {
     const endpoint = mode === "register" ? "register" : "login";

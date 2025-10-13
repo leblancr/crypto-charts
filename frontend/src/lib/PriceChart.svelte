@@ -1,11 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Chart from "chart.js/auto";
+  import { API_BASE } from "$lib/constants";
 
   export let symbol: string;   // 👈 this is the prop from +page.svelte
   export let ticker: string | null;
-
-  const API_BASE = import.meta.env.VITE_API_BASE;
 
   let canvas: HTMLCanvasElement;
   let chart: Chart | null = null;

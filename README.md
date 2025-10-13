@@ -49,4 +49,7 @@ Or:
 npm run build
 npm run preview
 
+After build:
+scp -r /common/projects/crypto-dashboard/frontend/build/ rich@skyebeau.com:/srv/crypto-dashboard/frontend/
+ssh rich@skyebeau.com 'sudo /usr/local/sbin/nginx -t && sudo service nginx restart'
 

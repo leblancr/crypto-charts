@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   import { authFetch } from "$lib/authFetch";
+  import { API_BASE } from "$lib/constants";
+
   const dispatch = createEventDispatcher();
 
   let watchlist: any[] = [];
   let topCoins: any[] = [];
   let newCoin = "";
   let selected: string | null = null;
-
-  const API_BASE = import.meta.env.VITE_API_BASE;
 
   async function addCoinToWatchlist() {
     if (!newCoin) return;

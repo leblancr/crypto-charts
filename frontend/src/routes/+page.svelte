@@ -74,7 +74,7 @@
     height: 16px;
     opacity: 0.85;
   }
-k
+
   .corner-icon:hover {
     opacity: 1;
   }
