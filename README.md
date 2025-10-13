@@ -53,3 +53,10 @@ After build:
 scp -r /common/projects/crypto-dashboard/frontend/build/ rich@skyebeau.com:/srv/crypto-dashboard/frontend/
 ssh rich@skyebeau.com 'sudo /usr/local/sbin/nginx -t && sudo service nginx restart'
 
+To restart backend if it stops for some reason:
+cd /srv/crypto-dashboard
+nohup poetry run gunicorn backend.main:app \
+  --workers 3 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 127.0.0.1:9000 \
+  > gunicorn.log 2>&1 &

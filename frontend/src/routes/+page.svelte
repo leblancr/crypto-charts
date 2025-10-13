@@ -53,6 +53,15 @@
   </div>
 </div>
 
+<!-- frontend/src/lib/components/Footer.svelte -->
+<script>
+  // Import each logo from your assets folder so SvelteKit includes them in the build
+  import svelteLogo from '$lib/assets/32px-Svelte_Logo.png';
+  import fastapiLogo from '$lib/assets/32px-Fastapi_Logo.png';
+  import postgresLogo from '$lib/assets/32px-Postgresql_elephant.png';
+  import freebsdLogo from '$lib/assets/32x32freebsd-logo.png';
+</script>
+
 <footer class="corner-icons">
   <img src={svelteLogo} alt="Svelte" class="corner-icon" />
   <img src={fastapiLogo} alt="Fastapi" class="corner-icon" />
