@@ -5,9 +5,9 @@
   import Watchlist from "$lib/Watchlist.svelte";
   import PriceChart from "$lib/PriceChart.svelte";
 
-  import svelteLogo from "$lib/assets/32px-Svelte_Logo.svg";
+  import svelteLogo from "$lib/assets/32px-Svelte_Logo.png";
   import fastapiLogo from "$lib/assets/32px-fastapi-logo.png";
-  import postgresLogo from "$lib/assets/32px-Postgresql_elephant.svg";
+  import postgresLogo from "$lib/assets/32px-Postgresql_elephant.png";
   import freebsdLogo from "$lib/assets/32x32freebsd-logo.png";
 
   let token: string | null = null;
@@ -52,15 +52,6 @@
     {/if}
   </div>
 </div>
-
-<!-- frontend/src/lib/components/Footer.svelte -->
-<script>
-  // Import each logo from your assets folder so SvelteKit includes them in the build
-  import svelteLogo from '$lib/assets/32px-Svelte_Logo.png';
-  import fastapiLogo from '$lib/assets/32px-Fastapi_Logo.png';
-  import postgresLogo from '$lib/assets/32px-Postgresql_elephant.png';
-  import freebsdLogo from '$lib/assets/32x32freebsd-logo.png';
-</script>
 
 <footer class="corner-icons">
   <img src={svelteLogo} alt="Svelte" class="corner-icon" />
