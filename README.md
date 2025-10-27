@@ -1,4 +1,5 @@
-# hfastapi-crypto
+# fastapi-crypto
+🧠 Develop on Void → 🧱 Deploy on FreeBSD.
 Outside venv, no venv yet:
 pyenv install 3.13.3 
 pyenv local 3.13.3   # makes python=3.13.3 inside this project dir
@@ -9,10 +10,11 @@ poetry add sqlalchemy asyncpg
 poetry add python-dotenv
 poetry add httpx
 
+******** Local:
 source $(poetry env info --path)/bin/activate
 
 To start backend:
-cd /common/projects/python/crypto-dashboard
+cd /common/projects/python/crypto-charts
 poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 poetry run uvicorn backend.main:app --reload
 
@@ -30,10 +32,17 @@ Install dependencies:
 npm install
 
 Start the dev server (local):
-cd /common/projects/python/crypto-dashboard/frontend
+cd /common/projects/python/crypto-charts/frontend
 npm run dev
 
-VPS:
+******** VPS:
+That’s the production Postgres user and database:
+User: crypto_dashboard_user
+Password: reddcry
+Database: crypto_db
+Host: skyebeau.com
+SSL: required
+
 So the very first time (or after new deps are added):
 cd /srv/crypto-dashboard/frontend
 npm install
@@ -60,3 +69,11 @@ nohup poetry run gunicorn backend.main:app \
   --worker-class uvicorn.workers.UvicornWorker \
   --bind 127.0.0.1:9000 \
   > gunicorn.log 2>&1 &
+
+sudo supervisord -c /usr/local/etc/supervisord.conf
+
+Verify and reload configs:
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl status
+

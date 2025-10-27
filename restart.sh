@@ -1,7 +1,7 @@
 #!/bin/sh
 # restart.sh — safely restart the FastAPI Crypto Dashboard backend
 
-APP_DIR="/srv/crypto-dashboard"
+APP_DIR="/srv/crypto-charts"
 PORT=9000
 LOGFILE="$APP_DIR/gunicorn.log"
 

@@ -1,22 +1,34 @@
-# FILE: backend/db.py
+# FILE: backend/database.py
+import os
+from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 
+## ───────────────────────────────────────────────
+# Load environment variables from .env
+load_dotenv()
+
 # Local Postgres
-# DATABASE_URL = "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_db"
+# DATABASE_URL = "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_charts"
 
 # Remote Postgres with sslmode
-SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?sslmode=require"
-
+# SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?sslmode=require"
 #
-DATABASE_URL = SQLALCHEMY_DATABASE_URL
-
+# #
+# DATABASE_URL = SQLALCHEMY_DATABASE_URL
+#
 # Optional: sync URL (for Alembic migrations)
-SQLALCHEMY_SYNC_DATABASE_URL = (
-    SQLALCHEMY_DATABASE_URL
-    .replace("+asyncpg", "+psycopg2")
-    .replace("?ssl=require", "?sslmode=require")
+# SQLALCHEMY_SYNC_DATABASE_URL = (
+#     SQLALCHEMY_DATABASE_URL
+#     .replace("+asyncpg", "+psycopg2")
+#     .replace("?ssl=require", "?sslmode=require")
+# )
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_charts",  # default local
 )
+
 print("🔍 Using DATABASE_URL:", DATABASE_URL)
 
 # Async engine
