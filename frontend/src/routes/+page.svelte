@@ -39,7 +39,7 @@
 
 <!-- Top bar -->
 <div style="display:flex;justify-content:center;align-items:center;position:relative;height:50px;padding:0 1rem;margin-bottom:1rem;">
-  <h1 style="color:blue;margin:0;font-size:1.5rem;line-height:50px;">Crypto Dashboard</h1>
+  <h1 style="color:blue;margin:0;font-size:1.5rem;line-height:50px;">Crypto Charts</h1>
 
   <div style="position:absolute;right:1rem;top:0;height:100%;display:flex;align-items:center;gap:0.5rem;">
     {#if currentUser}
