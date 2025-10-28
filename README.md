@@ -1,5 +1,6 @@
 # fastapi-crypto
 🧠 Develop on Void → 🧱 Deploy on FreeBSD.
+
 Outside venv, no venv yet:
 pyenv install 3.13.3 
 pyenv local 3.13.3   # makes python=3.13.3 inside this project dir

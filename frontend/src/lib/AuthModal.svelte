@@ -6,16 +6,23 @@
   const dispatch = createEventDispatcher();
 
   export let isRegister = false;
-  let mode: "login" | "register" | "forgot" = isRegister ? "register" : "login";
 
+  let confirmPassword = "";
   let username = "";
   let password = "";
   let newPassword = "";
   let errorMessage: string | null = null;
   let message: string | null = null;
+  let mode: "login" | "register" | "forgot" = isRegister ? "register" : "login";
 
   async function handleAuth() {
     const endpoint = mode === "register" ? "register" : "login";
+
+    if (mode === "register" && password !== confirmPassword) {
+      errorMessage = "Passwords do not match";
+      return;
+    }
+
     const resp = await fetch(`${API_BASE}/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,22 +95,19 @@
         <p style="color:green;">{message}</p>
       {/if}
     {:else if mode === "register"}
-      <h2>Register</h2>
-        <div style="margin-top:.5rem;">
-          <button type="button" on:click={() => switchMode("login")} style="color:blue;cursor:pointer;">
-            Already have an account? Login
-          </button>
-        </div>
+    <h2>Register</h2>
+      <input type="text" bind:value={username} placeholder="Username" style="display:block;margin-bottom:0.5rem;" />
+      <input type="password" bind:value={password} placeholder="Password" style="display:block;margin-bottom:0.5rem;" />
       <button on:click={handleAuth}>Register</button>
 
       {#if errorMessage}<p style="color:red;">{errorMessage}</p>{/if}
       {#if message}<p style="color:green;">{message}</p>{/if}
 
       <div style="margin-top:.5rem;">
-        <button type="button" on:click={() => mode="login"} style="color:blue;cursor:pointer;">
-          Already have an account? Login
-        </button>
-      </div>
+      <button type="button" on:click={() => switchMode("login")} style="color:blue;cursor:pointer;background:none;border:none;padding:0;">
+        Already have an account? Login
+      </button>
+    </div>
 
     {:else if mode === "forgot"}
       <h2>Reset Password</h2>
