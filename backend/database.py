@@ -6,23 +6,11 @@ from sqlalchemy.orm import declarative_base
 
 ## ───────────────────────────────────────────────
 # Load environment variables from .env
-load_dotenv()
 
-# Local Postgres
-# DATABASE_URL = "postgresql+asyncpg://rich:reddpos@localhost:5432/crypto_charts"
-
-# Remote Postgres with sslmode
-# SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://crypto_dashboard_user:reddcry@skyebeau.com:5432/crypto_db?sslmode=require"
-#
-# #
-# DATABASE_URL = SQLALCHEMY_DATABASE_URL
-#
-# Optional: sync URL (for Alembic migrations)
-# SQLALCHEMY_SYNC_DATABASE_URL = (
-#     SQLALCHEMY_DATABASE_URL
-#     .replace("+asyncpg", "+psycopg2")
-#     .replace("?ssl=require", "?sslmode=require")
-# )
+if os.getenv("APP_ENV") == "production":
+    load_dotenv(".env.prod")
+else:
+    load_dotenv(".env")
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",

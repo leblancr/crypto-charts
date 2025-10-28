@@ -77,3 +77,18 @@ sudo supervisorctl reread
 sudo supervisorctl update
 sudo supervisorctl status
 
+sudo cat /usr/local/etc/supervisord.d/crypto-charts.ini
+
+[program:crypto-charts]
+command=/srv/crypto-charts/.venv/bin/gunicorn -k uvicorn.workers.UvicornWorker backend.main:app --bind 127.0.0.1:9000
+directory=/srv/crypto-charts
+user=rich
+autostart=true
+autorestart=true
+stdout_logfile=/var/log/crypto_charts_access.log
+stderr_logfile=/var/log/crypto_charts_error.log
+
+to redeploy:
+cd /srv/crypto-charts
+git pull origin main
+sudo supervisorctl restart crypto-charts
