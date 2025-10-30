@@ -1,5 +1,5 @@
 # fastapi-crypto
-🧠 Develop on Void → 🧱 Deploy on FreeBSD.
+🧠 Develop on FreeBSD → 🧱 Deploy on FreeBSD.
 
 Outside venv, no venv yet:
 pyenv install 3.13.3 
@@ -14,9 +14,9 @@ poetry add httpx
 ******** Local:
 source $(poetry env info --path)/bin/activate
 
-To start backend:
+To start backend, 9000 to avoid django's 8000:
 cd /common/projects/python/crypto-charts
-poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 9000
 poetry run uvicorn backend.main:app --reload
 
 pkill -f "uvicorn"
@@ -93,3 +93,18 @@ to redeploy:
 cd /srv/crypto-charts
 git pull origin main
 sudo supervisorctl restart crypto-charts
+
+# Deploy to VPS:
+# ── FastAPI (crypto-charts)
+cd /srv/crypto-charts \
+&& git pull --ff-only \
+&& cd frontend \
+&& npm ci --no-audit --no-fund \
+&& npm run build \
+&& cd .. \
+&& . .venv/bin/activate \
+&& poetry config virtualenvs.create false \
+&& poetry install --only main --no-root --no-interaction \
+&& sudo supervisorctl restart crypto-charts \
+&& sudo supervisorctl tail -n 30 crypto-charts stderr
+

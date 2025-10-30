@@ -30,8 +30,8 @@ app.add_middleware(
 app.include_router(watchlist.router, prefix="/watchlist", tags=["watchlist"])
 app.include_router(coins.router, prefix="/coins", tags=["coins"])
 
-# Global actions (no prefix)
-app.include_router(auth.router, tags=["auth"])
+# Auth endpoints under /auth/*
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 # ✅ Serve compiled Svelte from dist/
 # app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
