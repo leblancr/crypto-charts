@@ -117,6 +117,18 @@ ssh -f -N -L 5433:127.0.0.1:5432 rich@skyebeau.com
 stop:
 pkill -f "ssh -f -N -L 5433:127.0.0.1:5432"
 
+shortcut in ~/.ssh/config:
+
+Host dbvps
+    HostName skyebeau.com
+    User rich
+    LocalForward 5433 127.0.0.1:5432
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+ssh -f -N dbvps   # start
+pkill -f dbvps    # stop
+
 
 
 

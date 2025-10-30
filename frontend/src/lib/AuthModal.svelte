@@ -16,7 +16,8 @@
   let mode: "login" | "register" | "forgot" = isRegister ? "register" : "login";
 
   async function handleAuth() {
-    const endpoint = mode === "register" ? "register" : "login";
+    // const endpoint = mode === "register" ? "register" : "login";
+    const endpoint = mode === "register" ? "auth/register" : "auth/login";
 
     if (mode === "register" && password !== confirmPassword) {
       errorMessage = "Passwords do not match";
@@ -46,7 +47,7 @@
   }
 
   async function handleReset() {
-    const resp = await fetch(`${API_BASE}/reset-password-direct`, {
+    const resp = await fetch(`${API_BASE}/auth/reset-password-direct`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, new_password: newPassword })
