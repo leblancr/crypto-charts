@@ -17,7 +17,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
 print(f"🔍 Using DATABASE_URL: {DATABASE_URL}")
 print(f"🔑 Loaded JWT_SECRET: {JWT_SECRET[:4]}****")  # optional partial print for safety
 
-gtry:
+try:
     from sqlalchemy.engine.url import make_url
     url = make_url(DATABASE_URL)
     host, port = url.host or "127.0.0.1", url.port or 5432
