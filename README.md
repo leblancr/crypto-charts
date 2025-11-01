@@ -102,10 +102,10 @@ cd /srv/crypto-charts \
 && npm run build \
 && cd .. \
 && . .venv/bin/activate \
-&& poetry config virtualenvs.create false \
-&& poetry install --only main --no-root --no-interaction \
+&& pip install -U pip wheel setuptools \
+&& poetry export -f requirements.txt --without-hashes | pip install -r /dev/stdin \
 && sudo supervisorctl restart crypto-charts \
-&& sudo supervisorctl tail -n 30 crypto-charts stderr
+&& sudo supervisorctl tail crypto-charts stderr
 
 Must use tunnel on dev to appear on local vps.
 To start tunnel:
@@ -128,6 +128,17 @@ Host dbvps
 
 ssh -f -N dbvps   # start
 pkill -f dbvps    # stop
+
+asyncpg fails build on vps so build local and use whl:
+poetry run pip wheel asyncpg==0.30.0 --wheel-dir dist/
+scp dist/asyncpg-0.30.0-cp313-cp313-*.whl rich@skyebeau.com:/tmp/
+cd /srv/crypto-charts
+source .venv/bin/activate
+pip install /tmp/asyncpg-0.30.0-cp313-cp313-*.whl
+python -c "import asyncpg; print(asyncpg.__version__)"
+
+
+
 
 
 
